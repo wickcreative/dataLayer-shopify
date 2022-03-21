@@ -1,4 +1,4 @@
-<script>
+<script> 
 /**********************
 * DATALAYER ARCHITECTURE: SHOPIFY 
 * DEFINITION: A data layer helps you collect more accurate analytics data, that in turn allows you to better understand what potential buyers are doing on your website and where you can make improvements. It also reduces the time to implement marketing tags on a website, and reduces the need for IT involvement, leaving them to get on with implementing new features and fixing bugs.
@@ -319,78 +319,51 @@ __DL__jQueryinterval = setInterval(function(){
         
         /** DATALAYER: Product List Page (Collections, Category)
         * Fire on all product listing pages. */
+        /** have to truncate the records due to google size limit not taking the data **/
         
         {% if template contains 'collection' %}
         var product = {
-            'products': [
-                {% for product in collection.products %}{
-                    'id'              : {{product.id | json}},
-                    'sku'             : {{product.selected_or_first_available_variant.sku | json}},
-                    'variantId'       : {{product.selected_or_first_available_variant.id | json}},
-                    'productType'     : {{product.type | json}},
-                    'name'            : {{product.title | json}},
-                    'price'           : {{product.price | money_without_currency | remove: "," | json}},
-                    'imageURL'        : "https:{{product.featured_image.src|img_url:'grande'}}", 
-                    'productURL'      : '{{shop.secure_url}}{{product.url}}',
-                    'brand'           : {{shop.name | json}},
-                    'comparePrice'    : {{product.compare_at_price_max | money_without_currency | remove: "," | json}},
-                    'categories'      : {{product.collections|map:"title" | json}},
-                    'currentCategory' : {{collection.title | json}},
-                    'productOptions'  : {
-                        {% for option in product.options_with_values %}
-                        {% for value in option.values %}
-                        {% if option.selected_value == value %}
-                        {{option.name | json}} : {{value | json}},
-                        {% endif %}
-                        {% endfor %}
-                        {% endfor %}
-                    }
-                },
+            'pageType' : 'Collection',
+            'event'    : 'Collection',
+              'item_list_id'    : {{collection.handle | json}},
+              'item_list_name'  : {{collection.title | json}},            
+              'items': [
+                {% for product in collection.products %}
+                {
+                    'item_id'         : {{product.id}}
+                }
+                {%unless forloop.last%},{%endunless%}
                 {% endfor %}]
             };
-            var collections = {
-                'productList' : {{collection.title | json}},
-                'pageType'    : 'Collection',
-                'event'       : 'Collection'
-            };
-            dataLayer.push(product);
-            dataLayer.push(collections);
+
+          dataLayer.push(product);
             if(__DL__.debug){
                 console.log("Collections"+" :"+JSON.stringify(product, null, " "));
-                console.log("Collections"+" :"+JSON.stringify(collections, null, " "));
             }
             {% endif %}
-            
+ 
+      
+              {% if template contains 'product' %}
+      
             /** DATALAYER: Product Page
             * Fire on all Product View pages. */
             
             if (template.match(/.*product.*/gi) && !template.match(/.*collection.*/gi)) {
                 
-                sku = '';
                 var product = {
-                    'products': [{
-                        'id'              : {{product.id | json}},
-                        'sku'             : {{product.selected_or_first_available_variant.sku | json}},
+              		'currency':{{shop.currency | json}},
+              		'value':{{product.price | money_without_currency | remove: ","}},
+                    'items': [{
+                        'item_id'         : {{product.id | json}},
+                        'item_sku'        : {{product.selected_or_first_available_variant.sku | json}},
                         'variantId'       : {{product.selected_or_first_available_variant.id | json}},
-                        'productType'     : {{product.type | json}},
-                        'name'            : {{product.title | json}},
-                        'price'           : {{product.price | money_without_currency | remove: "," | json}},
-                        'description'     : {{product.description | strip_newlines | strip_html | json}},
-                        'imageURL'        : "https:{{product.featured_image.src|img_url:'grande'}}", 
-                        'productURL'      : '{{shop.secure_url}}{{product.url}}',
-                        'brand'           : {{shop.name | json}},              
-                        'comparePrice'    : {{product.compare_at_price_max | money_without_currency | remove: "," | json}},
-                        'categories'      : {{product.collections | map:"title" | json}},
-                        'currentCategory' : {{collection.title | json}},
-                        'productOptions'  : {
-                            {% for option in product.options_with_values %}
-                            {% for value in option.values %}
-                            {% if option.selected_value == value %}
-                            {{option.name | json}} : {{value | json}},
-                            {% endif %}
-                            {% endfor %}
-                            {% endfor %}
-                        }
+                        'item_category'     : {{product.type | json}},
+                        'item_name'       : {{product.title | json}},
+                        'price'           : {{product.price | money_without_currency | remove: ","}},
+                        'currency'		  : {{shop.currency | json}},
+              			'quantity'		  : 1,
+                        'item_brand'      : {{shop.name | json}},              
+                        'comparePrice'    : {{product.compare_at_price_max | money_without_currency | remove: ","}}
                     }]
                 };
                 
@@ -405,25 +378,29 @@ __DL__jQueryinterval = setInterval(function(){
                     }
                     productView();
                     
+
                     $(__DL__.cartTriggers).click(function(){
                         var skumatch = {{product.selected_or_first_available_variant.sku | json}};
                         if(sku != skumatch){
                             productView();
                         }
                     });
+
                 }
+  		{%endif%}
                 
                 /** DATALAYER: Cart View
                 * Fire anytime a user views their cart (non-dynamic) */
                 
                 {% if template contains 'cart' %}
                 var cart = {
-                    'products':[{% for line_item in cart.items %}{
-                        'id'       : {{line_item.product_id | json}},
-                        'sku'      : {{line_item.sku | json}},
-                        'variant'  : {{line_item.variant_id | json}},
-                        'name'     : {{line_item.title | json}},
+                    'items':[{% for line_item in cart.items %}{
+                        'item_id'  : {{line_item.product_id | json}},
+                        'item_sku'      : {{line_item.sku | json}},
+                        'variantId'  : {{line_item.variant_id | json}},
+                        'item_name': {{line_item.product.title | json}},
                         'price'    : {{line_item.price | money_without_currency | remove: "," | json}},
+                        'currency' : {{shop.currency | json}},
                         'quantity' : {{line_item.quantity | json}}
                     },{% endfor %}],
                     'pageType' : 'Cart',
@@ -446,12 +423,13 @@ __DL__jQueryinterval = setInterval(function(){
                             var removeFromCart = {
                                 'products': __DL__.removeCart.items.map(function (line_item) {
                                     return {
-                                        'id'       : line_item.product_id,
-                                        'sku'      : line_item.sku,
-                                        'variant'  : line_item.variant_id,
-                                        'name'     : line_item.title,
-                                        'price'    : (line_item.price/100),
-                                        'quantity' : line_item.quantity
+                                        'item_id'    : line_item.product_id,
+                                        'item_sku'   : line_item.sku,
+                                        'variantId'  : line_item.variant_id,
+                                        'item_name'  : line_item.product.title,
+                                        'price'      : (line_item.price/100),
+                                        'quantity'   : line_item.quantity,
+                                        'currency'   : {{shop.currency | json}}
                                     }
                                 }),
                                 'pageType' : 'Remove from Cart',
@@ -476,36 +454,35 @@ __DL__jQueryinterval = setInterval(function(){
                 
                 {% endif %}
                 
+  {% if checkout.line_items %}
                 /** 
                 * DATALAYER Variable
                 * Checkout & Transaction Data */
                 
-                __DL__products = [];
+              __DL__products = [];
                 
                 {% for line_item in checkout.line_items %}
                 
                 __DL__products.push({
-                    'id'          : {{line_item.product_id | json}},
-                    'sku'         : {{line_item.sku | json}},
-                    'variantId'   : {{line_item.variant_id | json}},
-                    'name'        : {{line_item.title | json}},
-                    'productType' : {{line_item.product.type | json}},
-                    'price'       : {{line_item.price | money_without_currency | remove: "," | json}},
-                    'quantity'    : {{line_item.quantity | json}},
-                    'description' : {{line_item.product.description | strip_newlines | strip_html  | json }},
-                    'imageURL'    : "https:{{line_item.product.featured_image.src|img_url:'grande'}}", 
-                    'productURL'  : '{{shop.secure_url}}{{line_item.product.url}}'
+                    'item_id'          : {{line_item.product_id}},
+                    'item_sku'         : {{line_item.sku | json}},
+                    'variantId'        : {{line_item.variant_id | json}},
+                    'item_name'        : {{line_item.title | json}},
+                    'item_category'    : {{line_item.product.type | json}},
+                    'price'            : {{line_item.price | money_without_currency | remove: ","}},
+                    'quantity'         : {{line_item.quantity | json}},
+                    'currency'		   : {{shop.currency | json}}
                 });
                 
                 {% endfor %}
                 transactionData = {
-                    'transactionNumber'      : {{checkout.order_id | json}},
-                    'transactionId'          : {{checkout.order_number | json}},
+                    'transactionId'          : {{checkout.order_id | json}},
+                    'transactionNumber'      : {{checkout.order_number | json}},
                     'transactionAffiliation' : {{shop.name | json}},
-                    'transactionTotal'       : {{checkout.total_price | money_without_currency| remove: "," | json}},
-                    'transactionTax'         : {{checkout.tax_price | money_without_currency| remove: "," | json}},
-                    'transactionShipping'    : {{checkout.shipping_price | money_without_currency| remove: "," | json}},
-                    'transactionSubtotal'    : {{checkout.subtotal_price | money_without_currency| remove: "," | json}},
+                    'transactionTotal'       : {{checkout.total_price | money_without_currency| remove: "," }},
+                    'transactionTax'         : {{checkout.tax_price | money_without_currency| remove: "," }},
+                    'transactionShipping'    : {{checkout.shipping_price | money_without_currency| remove: "," }},
+                    'transactionSubtotal'    : {{checkout.subtotal_price | money_without_currency| remove: "," }},
                     {% for discount in checkout.discounts %}
                     'promoCode' : {{discount.code | json}},
                     'discount'  : {{discount.amoun t | money_without_currency | json}},
@@ -513,11 +490,45 @@ __DL__jQueryinterval = setInterval(function(){
                     
                     'products': __DL__products
                 };
+  //version 2
+  
+                __DL__products2 = [];
+                
+                {% for line_item in checkout.line_items %}
+                
+                __DL__products2.push({
+                    'item_id'          : {{line_item.product_id}},
+                    'item_sku'         : {{line_item.sku | json}},
+                    'item_name'        : {{line_item.title | json}},
+                    'price'            : {{line_item.price | money_without_currency | remove: "," | json}},
+                    'quantity'         : {{line_item.quantity | json}},
+                    'item_category'    : {{line_item.product.type | json}}
+                });
+                
+                {% endfor %}
+                transactionData2 = {
+                    'transactionId'          : {{checkout.order_id | json}},
+                    'transactionNumber'      : {{checkout.order_number | json}},
+                    'transactionAffiliation' : {{shop.name | json}},
+                    'transactionTotal'       : {{checkout.total_price | money_without_currency| remove: "," }},
+                    'transactionTax'         : {{checkout.tax_price | money_without_currency| remove: "," }},
+                    'transactionShipping'    : {{checkout.shipping_price | money_without_currency| remove: "," }},
+                    'transactionSubtotal'    : {{checkout.subtotal_price | money_without_currency| remove: "," }},
+                    {% for discount in checkout.discounts %}
+                    'promoCode' : {{discount.code | json}},
+                    'discount'  : {{discount.amoun t | money_without_currency | json}},
+                    {% endfor %}
+                    
+                    'products': __DL__products2
+                };
+  
+  
                 
                 if(__DL__.debug == true){
                     
                     /** DATALAYER: Transaction */
-                    if(document.location.pathname.match(/.*order.*/g)){
+                    if(document.location.pathname.match(/.*orders.*/g)){
+                      console.log('ran this iteration');
                         dataLayer.push(transactionData,{
                             'pageType' :'Transaction',
                             'event'    :'Transaction'
@@ -531,20 +542,20 @@ __DL__jQueryinterval = setInterval(function(){
                     if(Shopify.Checkout.step){ 
                         if(Shopify.Checkout.step.length > 0){
                             if (Shopify.Checkout.step === 'contact_information'){
-                                dataLayer.push(transactionData,{
+                                dataLayer.push(transactionData2,{
                                     'event'    :'Customer Information',
                                     'pageType' :'Customer Information'});
-                                    console.log("Customer Information - Transaction Data"+" :"+JSON.stringify(transactionData, null, " "));
+                                    console.log("Customer Information - Transaction Data"+" :"+JSON.stringify(transactionData2, null, " "));
                                 }else if (Shopify.Checkout.step === 'shipping_method'){
-                                    dataLayer.push(transactionData,{
+                                    dataLayer.push(transactionData2,{
                                         'event'    :'Shipping Information',
                                         'pageType' :'Shipping Information'});
-                                        console.log("Shipping - Transaction Data"+" :"+JSON.stringify(transactionData, null, " "));
+                                        console.log("Shipping - Transaction Data"+" :"+JSON.stringify(transactionData2, null, " "));
                                     }else if( Shopify.Checkout.step === "payment_method" ){
-                                        dataLayer.push(transactionData,{
+                                        dataLayer.push(transactionData2,{
                                             'event'    :'Add Payment Info',
                                             'pageType' :'Add Payment Info'});
-                                            console.log("Payment - Transaction Data"+" :"+JSON.stringify(transactionData, null, " "));
+                                            console.log("Payment - Transaction Data"+" :"+JSON.stringify(transactionData2, null, " "));
                                         }
                                     }
                                     
@@ -569,6 +580,8 @@ __DL__jQueryinterval = setInterval(function(){
                                 }
                             }
                             
+  
+  {%endif%}
                             /** DATALAYER: All Pages
                             * Fire all pages trigger after all additional dataLayers have loaded. */
                             
@@ -614,10 +627,11 @@ __DL__jQueryinterval = setInterval(function(){
                                         var cart = {
                                             'products': __DL__.cart.items.map(function (line_item) {
                                                 return {
-                                                    'id'       : line_item.id,
-                                                    'sku'      : line_item.sku,
-                                                    'variant'  : line_item.variant_id,
-                                                    'name'     : line_item.title,
+                                                    'item_id'       : line_item.product_id,
+                                                    'currency'   : {{shop.currency | json}},
+                                                    'item_sku'      : line_item.sku,
+                                                    'variantId'  : line_item.variant_id,
+                                                    'item_name'     : line_item.product.title,
                                                     'price'    : (line_item.price/100),
                                                     'quantity' : line_item.quantity
                                                 }
@@ -657,10 +671,11 @@ __DL__jQueryinterval = setInterval(function(){
                                                             var removeFromCart = {
                                                                 'products': __DL__.removeCart.items.map(function (line_item) {
                                                                     return {
-                                                                        'id'       : line_item.id,
-                                                                        'sku'      : line_item.sku,
-                                                                        'variant'  : line_item.variant_id,
-                                                                        'name'     : line_item.title,
+                                                                        'item_id'       : line_item.product_id,
+                                                                        'item_sku'      : line_item.sku,
+                                                                        'currency'   : {{shop.currency | json}},
+                                                                        'variantId'  : line_item.variant_id,
+                                                                        'item_name'     : line_item.product.title,
                                                                         'price'    : (line_item.price/100),
                                                                         'quantity' : line_item.quantity
                                                                     }
@@ -687,10 +702,11 @@ __DL__jQueryinterval = setInterval(function(){
                                     var cart = {
                                         'products': __DL__.cart.items.map(function (line_item) {
                                             return {
-                                                'id'       : line_item.id,
-                                                'sku'      : line_item.sku,
-                                                'variant'  : line_item.variant_id,
-                                                'name'     : line_item.title,
+                                                'item_id'  : line_item.product_id,
+                                                'item_sku'      : line_item.sku,
+                                                'variantId'  : line_item.variant_id,
+                                                'currency'   : {{shop.currency | json}},
+                                                'item_name'     : line_item.title,
                                                 'price'    : (line_item.price/100),
                                                 'quantity' : line_item.quantity
                                             }
@@ -717,10 +733,11 @@ __DL__jQueryinterval = setInterval(function(){
                                             var cart = {
                                                 'products': __DL__.cart.items.map(function (line_item) {
                                                     return {
-                                                        'id'       : line_item.id,
-                                                        'sku'      : line_item.sku,
-                                                        'variant'  : line_item.variant_id,
-                                                        'name'     : line_item.title,
+                                                        'item_id'       : line_item.product_id,
+                                                        'item_sku'      : line_item.sku,
+                                                        'currency'   : {{shop.currency | json}},
+                                                        'variantId'  : line_item.variant_id,
+                                                        'item_name'     : line_item.title,
                                                         'price'    : (line_item.price/100),
                                                         'quantity' : line_item.quantity
                                                     }
@@ -799,10 +816,11 @@ __DL__jQueryinterval = setInterval(function(){
                                                         var removeFromCart = {
                                                             'products': __DL__.removeCart.items.map(function (line_item) {
                                                                 return {
-                                                                    'id'       : line_item.id,
-                                                                    'sku'      : line_item.sku,
-                                                                    'variant'  : line_item.variant_id,
-                                                                    'name'     : line_item.title,
+                                                                    'item_id'       : line_item.product_id,
+                                                                    'item_sku'      : line_item.sku,
+                                                                    'currency'   : {{shop.currency | json}},
+                                                                    'variantId'  : line_item.variant_id,
+                                                                    'item_name'     : line_item.title,
                                                                     'price'    : (line_item.price/100),
                                                                     'quantity' : line_item.quantity
                                                                 }
