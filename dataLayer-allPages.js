@@ -467,7 +467,7 @@ __DL__jQueryinterval = setInterval(function(){
                     'item_id'          : {{line_item.product_id}},
                     'item_sku'         : {{line_item.sku | json}},
                     'variantId'        : {{line_item.variant_id | json}},
-                    'item_name'        : {{line_item.title | json}},
+                    'item_name'        : {{line_item.product.title | json}},
                     'item_category'    : {{line_item.product.type | json}},
                     'price'            : {{line_item.price | money_without_currency | remove: ","}},
                     'quantity'         : {{line_item.quantity | json}},
@@ -499,7 +499,7 @@ __DL__jQueryinterval = setInterval(function(){
                 __DL__products2.push({
                     'item_id'          : {{line_item.product_id}},
                     'item_sku'         : {{line_item.sku | json}},
-                    'item_name'        : {{line_item.title | json}},
+                    'item_name'        : {{line_item.product.title | json}},
                     'price'            : {{line_item.price | money_without_currency | remove: "," | json}},
                     'quantity'         : {{line_item.quantity | json}},
                     'item_category'    : {{line_item.product.type | json}}
@@ -706,7 +706,7 @@ __DL__jQueryinterval = setInterval(function(){
                                                 'item_sku'      : line_item.sku,
                                                 'variantId'  : line_item.variant_id,
                                                 'currency'   : {{shop.currency | json}},
-                                                'item_name'     : line_item.title,
+                                                'item_name'     : line_item.product.title,
                                                 'price'    : (line_item.price/100),
                                                 'quantity' : line_item.quantity
                                             }
@@ -737,7 +737,7 @@ __DL__jQueryinterval = setInterval(function(){
                                                         'item_sku'      : line_item.sku,
                                                         'currency'   : {{shop.currency | json}},
                                                         'variantId'  : line_item.variant_id,
-                                                        'item_name'     : line_item.title,
+                                                        'item_name'     : line_item.product.title,
                                                         'price'    : (line_item.price/100),
                                                         'quantity' : line_item.quantity
                                                     }
@@ -820,7 +820,7 @@ __DL__jQueryinterval = setInterval(function(){
                                                                     'item_sku'      : line_item.sku,
                                                                     'currency'   : {{shop.currency | json}},
                                                                     'variantId'  : line_item.variant_id,
-                                                                    'item_name'     : line_item.title,
+                                                                    'item_name'     : line_item.product.title,
                                                                     'price'    : (line_item.price/100),
                                                                     'quantity' : line_item.quantity
                                                                 }
